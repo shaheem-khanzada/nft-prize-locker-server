@@ -73,7 +73,7 @@ export class TransferService {
             console.log(Events.Acquire, _queues[i]);
             await this.create(_queues[i]);
           } catch (e) {
-            console.log('[error]', e?.response || e);
+            console.log('[error] ', e?.response || e);
           }
 				}
         
