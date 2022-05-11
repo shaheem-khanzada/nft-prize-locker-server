@@ -3,7 +3,6 @@ import { Controller, Get, Post, Body } from '@nestjs/common';
 import { Transfer } from 'src/schemas/transfer.schema';
 import { TransferService } from './transfer.service';
 import { Events } from 'src/constant';
-import { ethers } from 'ethers';
 
 @Controller('transfer/logs')
 export class TransferController {

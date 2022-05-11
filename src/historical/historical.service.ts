@@ -13,7 +13,8 @@ export class HistoricalService {
 
   create(historicalInfo: Historical) {
     const newHistoricalInfo = new this.historicalModel(historicalInfo);
-    return newHistoricalInfo.save();
+    newHistoricalInfo.save();
+    return newHistoricalInfo;
   }
 
   findAll(tokenId: string): Promise<Historical[]> {
@@ -33,11 +34,15 @@ export class HistoricalService {
     return historical;
   }
 
-  async update(id: string, body: Partial<Historical>) {
-    let historical = await this.findOne(id);
-    Object.assign(historical, body);
-    return historical.save();
-  }
+  async update(id: string, body: Partial<Historical>){
+    const comment = await this.historicalModel.findByIdAndUpdate(id, body, {
+      new: true
+    })
+    if (!comment) {
+      return new NotFoundException();
+    }
+    return comment;
+}
 
   remove(id: string) {
     return this.historicalModel.deleteOne({ _id: id }).exec();

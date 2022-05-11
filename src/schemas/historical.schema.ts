@@ -15,6 +15,12 @@ export class Historical {
   @Prop({ required: true })
   address: string;
 
+  @Prop({ required: false })
+  markAsDeleted: boolean;
+
+  @Prop({ required: false })
+  deletedBy: string;
+
   @IsNotEmpty()
   @Prop({ required: true })
   tokenId: number;
