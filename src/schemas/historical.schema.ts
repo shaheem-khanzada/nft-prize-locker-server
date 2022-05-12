@@ -15,6 +15,10 @@ export class Historical {
   @Prop({ required: true })
   address: string;
 
+  @IsNotEmpty()
+  @Prop({ required: true })
+  commentId: number
+
   @Prop({ required: false })
   markAsDeleted: boolean;
 
