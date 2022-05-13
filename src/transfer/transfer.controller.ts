@@ -4,12 +4,11 @@ import {
   Get,
   Post,
   Body,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { Transfer } from 'src/schemas/transfer.schema';
 import { TransferService } from './transfer.service';
 import { Events } from 'src/constant';
+import { ParamsDto } from './dto/params';
 
 @Controller('transfer/logs')
 export class TransferController {
@@ -38,13 +37,7 @@ export class TransferController {
   }
 
   @Get(':tokenId')
-  @UsePipes(
-    new ValidationPipe({
-      skipUndefinedProperties: true,
-      skipNullProperties: true,
-    }),
-  )
-  findAll(@Param('tokenId') tokenId: string) {
+  findAll(@Param('tokenId') tokenId: ParamsDto) {
     return this.transferService.findAll(tokenId);
   }
 }

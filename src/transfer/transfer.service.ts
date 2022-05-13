@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -40,10 +39,7 @@ export class TransferService {
   }
 
   findAll(tokenId: ParamsDto): Promise<Transfer[]> {
-    if (typeof tokenId === 'string') {
-      return this.transferModel.find({ tokenId }).exec();
-    }
-    throw new HttpException('expected string tokenId', HttpStatus.FOUND);
+    return this.transferModel.find({ tokenId }).exec();
   }
 
   findOneByTransactionHash(transactionHash: string): Promise<Transfer> {
