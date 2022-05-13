@@ -27,7 +27,7 @@ export class Historical {
 
   @IsNotEmpty()
   @Prop({ required: true })
-  tokenId: number;
+  tokenId: string;
 
   @Prop()
   timestamp: number;
