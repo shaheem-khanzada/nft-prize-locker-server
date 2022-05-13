@@ -11,6 +11,7 @@ import { ethers } from 'ethers';
 import { ConfigService } from '@nestjs/config';
 import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS, Events } from 'src/constant';
 import * as contractAbi from 'src/contracts/abi.json';
+import { ParamsDto } from './dto/params';
 
 const WINDOW_TIME = 1000;
 
@@ -38,7 +39,7 @@ export class TransferService {
     return newTransferLog.save();
   }
 
-  findAll(tokenId: string): Promise<Transfer[]> {
+  findAll(tokenId: ParamsDto): Promise<Transfer[]> {
     if (typeof tokenId === 'string') {
       return this.transferModel.find({ tokenId }).exec();
     }

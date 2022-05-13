@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Historical, HistoricalDocument } from 'src/schemas/historical.schema';
 import { NotFoundException } from '@nestjs/common';
+import { ParamsDto } from 'src/transfer/dto/params';
 
 @Injectable()
 export class HistoricalService {
@@ -17,7 +18,7 @@ export class HistoricalService {
     return newHistoricalInfo;
   }
 
-  findAll(tokenId: string): Promise<Historical[]> {
+  findAll(tokenId: ParamsDto): Promise<Historical[]> {
     if (typeof(tokenId) === 'string') {
       return this.historicalModel.find({ tokenId }).exec();
     }
