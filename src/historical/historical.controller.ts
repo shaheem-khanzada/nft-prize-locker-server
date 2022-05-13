@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { Historical } from 'src/schemas/historical.schema';
-import { ParamsDto } from 'src/transfer/dto/params';
+import { ParamsDto } from './dto/params';
 import { HistoricalService } from './historical.service';
 
 @Controller('historical')

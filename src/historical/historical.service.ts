@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Historical, HistoricalDocument } from 'src/schemas/historical.schema';
 import { NotFoundException } from '@nestjs/common';
-import { ParamsDto } from 'src/transfer/dto/params';
+import { ParamsDto } from './dto/params';
 
 @Injectable()
 export class HistoricalService {
