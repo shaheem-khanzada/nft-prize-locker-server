@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Historical, HistoricalDocument } from 'src/schemas/historical.schema';
 import { NotFoundException } from '@nestjs/common';
@@ -18,7 +18,10 @@ export class HistoricalService {
   }
 
   findAll(tokenId: string): Promise<Historical[]> {
-    return this.historicalModel.find({ tokenId }).exec();
+    if (typeof(tokenId) === 'string') {
+      return this.historicalModel.find({ tokenId }).exec();
+    }
+    throw new HttpException('expected string tokenId', HttpStatus.FOUND);
   }
 
   async findOne(id: string) {

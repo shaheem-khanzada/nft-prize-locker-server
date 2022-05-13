@@ -16,7 +16,6 @@ const WINDOW_TIME = 1000;
 
 @Injectable()
 export class TransferService {
-
   timmer: NodeJS.Timeout | null | undefined;
   queues: any = {};
 
@@ -40,7 +39,10 @@ export class TransferService {
   }
 
   findAll(tokenId: string): Promise<Transfer[]> {
-    return this.transferModel.find({ tokenId }).exec();
+    if (typeof tokenId === 'string') {
+      return this.transferModel.find({ tokenId }).exec();
+    }
+    throw new HttpException('expected string tokenId', HttpStatus.FOUND);
   }
 
   findOneByTransactionHash(transactionHash: string): Promise<Transfer> {
@@ -48,8 +50,6 @@ export class TransferService {
   }
 
   initilizeContract(): ethers.Contract {
-    console.log(this.configService.get<string>(BLOCKCHAIN_NETWORK_URL))
-    console.log(this.configService.get<string>(CONTRACT_ADDRESS))
     const provider = new ethers.providers.JsonRpcProvider(
       this.configService.get<string>(BLOCKCHAIN_NETWORK_URL),
     );
@@ -64,7 +64,9 @@ export class TransferService {
   saveTransferLogs = async (payload: Transfer) => {
     if (!this.timmer) {
       this.timmer = setTimeout(async () => {
-        const _queues: Transfer[] = Object.keys(this.queues).map(key => this.queues[key]);
+        const _queues: Transfer[] = Object.keys(this.queues).map(
+          (key) => this.queues[key],
+        );
         this.queues = {};
         this.timmer = null;
 
@@ -75,8 +77,7 @@ export class TransferService {
           } catch (e) {
             console.log('[error]  ', e?.response || e);
           }
-				}
-        
+        }
       }, WINDOW_TIME);
     }
     this.queues[payload.transactionHash] = payload;
