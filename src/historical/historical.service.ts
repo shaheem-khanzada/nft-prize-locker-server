@@ -18,8 +18,8 @@ export class HistoricalService {
     return newHistoricalInfo;
   }
 
-  findAll(tokenId: ParamsDto): Promise<Historical[]> {
-    return this.historicalModel.find({ tokenId }).exec();
+  findAll(params: ParamsDto): Promise<Historical[]> {
+    return this.historicalModel.find({ tokenId: params.tokenId }).exec();
   }
 
   async findOne(id: string) {

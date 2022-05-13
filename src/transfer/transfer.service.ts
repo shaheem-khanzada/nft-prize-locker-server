@@ -38,8 +38,8 @@ export class TransferService {
     return newTransferLog.save();
   }
 
-  findAll(tokenId: ParamsDto): Promise<Transfer[]> {
-    return this.transferModel.find({ tokenId }).exec();
+  findAll(params: ParamsDto): Promise<Transfer[]> {
+    return this.transferModel.find({ tokenId: params.tokenId }).exec();
   }
 
   findOneByTransactionHash(transactionHash: string): Promise<Transfer> {

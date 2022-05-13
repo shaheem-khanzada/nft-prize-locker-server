@@ -37,7 +37,7 @@ export class TransferController {
   }
 
   @Get(':tokenId')
-  findAll(@Param('tokenId') tokenId: ParamsDto) {
-    return this.transferService.findAll(tokenId);
+  findAll(@Param() params: ParamsDto) {
+    return this.transferService.findAll(params);
   }
 }

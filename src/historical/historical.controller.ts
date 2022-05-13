@@ -21,8 +21,8 @@ export class HistoricalController {
   }
 
   @Get(':tokenId')
-  findAll(@Param('tokenId') tokenId: ParamsDto) {
-    return this.historicalService.findAll(tokenId);
+  findAll(@Param() params: ParamsDto) {
+    return this.historicalService.findAll(params);
   }
 
   @Patch(':id')
