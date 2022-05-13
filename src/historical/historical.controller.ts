@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Historical } from 'src/schemas/historical.schema';
 import { HistoricalService } from './historical.service';
@@ -20,6 +22,12 @@ export class HistoricalController {
   }
 
   @Get(':tokenId')
+  @UsePipes(
+    new ValidationPipe({
+      skipUndefinedProperties: true,
+      skipNullProperties: true,
+    }),
+  )
   findAll(@Param('tokenId') tokenId: string) {
     return this.historicalService.findAll(tokenId);
   }
