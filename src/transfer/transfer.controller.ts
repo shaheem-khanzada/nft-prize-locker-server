@@ -1,34 +1,61 @@
 import { Param } from '@nestjs/common';
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { Transfer } from 'src/schemas/transfer.schema';
 import { TransferService } from './transfer.service';
-import { Events } from 'src/constant';
 import { ParamsDto } from './dto/params';
 
 @Controller('transfer/logs')
 export class TransferController {
   constructor(private readonly transferService: TransferService) {
     const contract = this.transferService.initilizeContract();
-    contract.on(
-      Events.Acquire,
-      (videoId, seller, buyer, amount, { transactionHash }) => {
-        const payload: Transfer = {
-          from: seller,
-          to: buyer,
-          tokenId: videoId.toString(),
-          amount: amount.toString(),
+    contract.events
+      .Acquire({ fromBlock: 'latest' })
+      .on(
+        'data',
+        ({
           transactionHash,
-          timestamp: Date.now(),
-        };
-        console.log(payload);
-        this.transferService.saveTransferLogs(payload);
-      },
-    );
+          returnValues: { videoId, seller, buyer, amount },
+        }) => {
+          try {
+            const payload: Transfer = {
+              from: seller,
+              to: buyer,
+              tokenId: videoId.toString(),
+              amount: amount.toString(),
+              transactionHash,
+              timestamp: Date.now(),
+            };
+            console.log(payload);
+            this.transferService.saveTransferLogs(payload);
+          } catch {
+            // do nothing.
+          }
+        },
+      );
+
+    contract.events
+      .Transfer({ fromBlock: 'latest' })
+      .on(
+        'data',
+        async ({ transactionHash, returnValues: { from, to, tokenId } }) => {
+          try {
+            const nftDetails = await contract.methods
+              .detailsByTokenId(tokenId)
+              .call();
+            const payload: Transfer = {
+              from,
+              to,
+              tokenId: nftDetails.details.videoId,
+              amount: '0',
+              transactionHash,
+              timestamp: Date.now(),
+            };
+            this.transferService.saveTransferLogs(payload);
+          } catch {
+            // do nothing.
+          }
+        },
+      );
   }
 
   @Post()

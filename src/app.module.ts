@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TransferModule } from './transfer/transfer.module';
 import configuration from './config/configuration';
 import { MONGODB_URI } from './constant';
+import { SigningModule } from './signing/signing.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { MONGODB_URI } from './constant';
         uri: configService.get<string>(MONGODB_URI),
       }),
       inject: [ConfigService],
-    })
+    }),
+    SigningModule
   ],
   controllers: [],
   providers: [],

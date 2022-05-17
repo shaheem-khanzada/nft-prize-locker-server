@@ -1,16 +1,12 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Transfer, TransferDocument } from 'src/schemas/transfer.schema';
-import { ethers } from 'ethers';
 import { ConfigService } from '@nestjs/config';
-import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS, Events } from 'src/constant';
-import * as contractAbi from 'src/contracts/abi.json';
+import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS } from 'src/constant';
+import { socialNftAbi } from 'src/contracts/abi';
 import { ParamsDto } from './dto/params';
+import Web3 from 'web3';
 
 const WINDOW_TIME = 1000;
 
@@ -46,16 +42,15 @@ export class TransferService {
     return this.transferModel.findOne({ transactionHash }).exec();
   }
 
-  initilizeContract(): ethers.Contract {
-    const provider = new ethers.providers.JsonRpcProvider(
-      this.configService.get<string>(BLOCKCHAIN_NETWORK_URL),
+  initilizeContract() {
+    const wssProviderUrl = this.configService.get<string>(
+      BLOCKCHAIN_NETWORK_URL,
     );
-    const contract = new ethers.Contract(
+    const web3 = new Web3(new Web3.providers.WebsocketProvider(wssProviderUrl));
+    return new web3.eth.Contract(
+      socialNftAbi,
       this.configService.get<string>(CONTRACT_ADDRESS),
-      contractAbi,
-      provider,
     );
-    return contract;
   }
 
   saveTransferLogs = async (payload: Transfer) => {
@@ -69,7 +64,7 @@ export class TransferService {
 
         for (let i = 0; i < _queues.length; i += 1) {
           try {
-            console.log(Events.Acquire, _queues[i]);
+            console.log('Acquire', _queues[i]);
             await this.create(_queues[i]);
           } catch (e) {
             console.log('[error]  ', e?.response || e);
