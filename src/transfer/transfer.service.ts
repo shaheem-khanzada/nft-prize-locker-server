@@ -7,6 +7,7 @@ import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS } from 'src/constant';
 import { socialNftAbi } from 'src/contracts/abi';
 import { ParamsDto } from './dto/params';
 import Web3 from 'web3';
+import { BigNumber } from 'ethers';
 
 const WINDOW_TIME = 1000;
 
@@ -64,7 +65,6 @@ export class TransferService {
 
         for (let i = 0; i < _queues.length; i += 1) {
           try {
-            console.log('Acquire', _queues[i]);
             await this.create(_queues[i]);
           } catch (e) {
             console.log('[error]  ', e?.response || e);
@@ -74,4 +74,117 @@ export class TransferService {
     }
     this.queues[payload.transactionHash] = payload;
   };
+
+  onAcquire = (error: any, result: any) => {
+    if (error) {
+      return;
+    }
+    const {
+      transactionHash,
+      event,
+      returnValues: { videoId, seller, buyer, amount },
+    } = result;
+    console.log(event);
+    try {
+      const payload: Transfer = {
+        from: seller,
+        to: buyer,
+        tokenId: videoId.toString(),
+        amount: amount.toString(),
+        transactionHash,
+        timestamp: Date.now(),
+        actionType: 'Sale'
+      };
+      console.log(payload);
+      this.saveTransferLogs(payload);
+    } catch {
+      // do nothing.
+    }
+  }
+
+  onMint = (error: any, result: any) => {
+    if (error) {
+      return;
+    }
+    const {
+      transactionHash,
+      event,
+      returnValues: { videoId, minter, amount },
+    } = result;
+    console.log(event);
+    try {
+      const payload: Transfer = {
+        from: '0x0000000000000000000000000000000000000000',
+        to: minter,
+        tokenId: videoId.toString(),
+        amount: amount.toString(),
+        transactionHash,
+        timestamp: Date.now(),
+        actionType: 'Mint'
+      };
+      console.log(payload);
+      this.saveTransferLogs(payload);
+    } catch {
+      // do nothing.
+    }
+  }
+
+  onSponsorshipMint = (error: any, result: any) => {
+    if (error) {
+      return;
+    }
+    const {
+      transactionHash,
+      event,
+      returnValues: { videoId, sponsor, amount },
+    } = result;
+    console.log(event);
+    try {
+      const payload: Transfer = {
+        from: '0x0000000000000000000000000000000000000000',
+        to: sponsor,
+        tokenId: videoId.toString(),
+        amount: amount.toString(),
+        transactionHash,
+        timestamp: Date.now(),
+        actionType: 'Sponsor'
+      };
+      console.log(payload);
+      this.saveTransferLogs(payload);
+    } catch {
+      // do nothing.
+    }
+  }
+
+  onTrasfer = async(error: any, result: any) => {
+    if (error) {
+      return;
+    }
+    const {
+      event,
+      transactionHash,
+      returnValues: { from, to, tokenId },
+    } = result;
+    console.log(event, BigNumber.from(from).isZero());
+    try {
+      if (!BigNumber.from(from).isZero()) {
+        const contract = this.initilizeContract();
+        const nftDetails = await contract.methods
+          .detailsByTokenId(tokenId)
+          .call();
+        const payload: Transfer = {
+          from,
+          to,
+          tokenId: nftDetails.details.videoId,
+          amount: '0',
+          transactionHash,
+          timestamp: Date.now(),
+          actionType: 'Transfer'
+        };
+        this.saveTransferLogs(payload);
+      }
+    } catch {
+      // do nothing.
+    }
+  }
 }

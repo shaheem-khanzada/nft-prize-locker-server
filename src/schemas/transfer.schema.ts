@@ -18,6 +18,10 @@ export class Transfer {
 
   @IsNotEmpty()
   @Prop({ required: true })
+  actionType: string;
+
+  @IsNotEmpty()
+  @Prop({ required: true })
   transactionHash: string;
 
   @IsNotEmpty()
