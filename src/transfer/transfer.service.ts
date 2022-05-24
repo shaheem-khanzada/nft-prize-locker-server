@@ -167,22 +167,24 @@ export class TransferService {
     } = result;
     console.log(event, BigNumber.from(from).isZero());
     try {
-      if (!BigNumber.from(from).isZero()) {
-        const contract = this.initilizeContract();
-        const nftDetails = await contract.methods
-          .detailsByTokenId(tokenId)
-          .call();
-        const payload: Transfer = {
-          from,
-          to,
-          tokenId: nftDetails.details.videoId,
-          amount: '0',
-          transactionHash,
-          timestamp: Date.now(),
-          actionType: 'Transfer'
-        };
-        this.saveTransferLogs(payload);
-      }
+       setTimeout(async () => {
+        if (!BigNumber.from(from).isZero()) {
+          const contract = this.initilizeContract();
+          const nftDetails = await contract.methods
+            .detailsByTokenId(tokenId)
+            .call();
+          const payload: Transfer = {
+            from,
+            to,
+            tokenId: nftDetails.details.videoId,
+            amount: '0',
+            transactionHash,
+            timestamp: Date.now(),
+            actionType: 'Transfer'
+          };
+          this.saveTransferLogs(payload);
+        }
+       }, 5000);
     } catch {
       // do nothing.
     }
