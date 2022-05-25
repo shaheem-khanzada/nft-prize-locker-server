@@ -4,17 +4,20 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Historical, HistoricalDocument } from 'src/schemas/historical.schema';
 import { NotFoundException } from '@nestjs/common';
 import { ParamsDto } from './dto/params';
+import { EventEmitter2 as EventEmitter } from '@nestjs/event-emitter';
 
 @Injectable()
 export class HistoricalService {
   constructor(
     @InjectModel(Historical.name)
     private historicalModel: Model<HistoricalDocument>,
+    private eventEmitter: EventEmitter
   ) {}
 
   create(historicalInfo: Historical) {
     const newHistoricalInfo = new this.historicalModel(historicalInfo);
     newHistoricalInfo.save();
+    this.eventEmitter.emit('comment.created', newHistoricalInfo);
     return newHistoricalInfo;
   }
 
@@ -42,10 +45,13 @@ export class HistoricalService {
     if (!comment) {
       return new NotFoundException();
     }
+    this.eventEmitter.emit('comment.updated', comment);
     return comment;
 }
 
-  remove(id: string) {
-    return this.historicalModel.deleteOne({ _id: id }).exec();
+  async remove(id: string) {
+    const comment = await this.historicalModel.deleteOne({ _id: id }).exec();
+    this.eventEmitter.emit('comment.deleted', comment);
+    return comment;
   }
 }

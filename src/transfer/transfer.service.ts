@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
+import { EventEmitter2 as EventEmitter } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import { Transfer, TransferDocument } from 'src/schemas/transfer.schema';
 import { ConfigService } from '@nestjs/config';
@@ -7,7 +8,16 @@ import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS } from 'src/constant';
 import { socialNftAbi } from 'src/contracts/abi';
 import { ParamsDto } from './dto/params';
 import Web3 from 'web3';
-import { BigNumber } from 'ethers';
+import {
+  isZeroAddress,
+  normalizeAcquire,
+  normalizeClaimOwnership,
+  normalizeCommentStatusChange,
+  normalizeMint,
+  normalizeSponsor,
+  normalizeTransfer,
+  normalizeTransferStatus,
+} from 'src/helper/normalizeEventsData';
 
 const WINDOW_TIME = 1000;
 
@@ -19,6 +29,7 @@ export class TransferService {
   constructor(
     @InjectModel(Transfer.name) private transferModel: Model<TransferDocument>,
     private configService: ConfigService,
+    private eventEmitter: EventEmitter,
   ) {}
 
   async create(transfer: Transfer): Promise<Transfer> {
@@ -32,6 +43,7 @@ export class TransferService {
       );
     }
     const newTransferLog = new this.transferModel(transfer);
+    this.eventEmitter.emit('log.created', newTransferLog);
     return newTransferLog.save();
   }
 
@@ -76,117 +88,87 @@ export class TransferService {
   };
 
   onAcquire = (error: any, result: any) => {
-    if (error) {
-      return;
+    if (!error) {
+      try {
+        const payload = normalizeAcquire(result);
+        console.log(payload);
+        this.saveTransferLogs(payload);
+      } catch {
+        // do nothing.
+      }
     }
-    const {
-      transactionHash,
-      event,
-      returnValues: { videoId, seller, buyer, amount },
-    } = result;
-    console.log(event);
-    try {
-      const payload: Transfer = {
-        from: seller,
-        to: buyer,
-        tokenId: videoId.toString(),
-        amount: amount.toString(),
-        transactionHash,
-        timestamp: Date.now(),
-        actionType: 'Sale'
-      };
-      console.log(payload);
-      this.saveTransferLogs(payload);
-    } catch {
-      // do nothing.
-    }
-  }
+  };
 
   onMint = (error: any, result: any) => {
-    if (error) {
-      return;
+    if (!error) {
+      try {
+        const payload = normalizeMint(result);
+        console.log(payload);
+        this.saveTransferLogs(payload);
+      } catch {
+        // do nothing.
+      }
     }
-    const {
-      transactionHash,
-      event,
-      returnValues: { videoId, minter, amount },
-    } = result;
-    console.log(event);
-    try {
-      const payload: Transfer = {
-        from: '0x0000000000000000000000000000000000000000',
-        to: minter,
-        tokenId: videoId.toString(),
-        amount: amount.toString(),
-        transactionHash,
-        timestamp: Date.now(),
-        actionType: 'Mint'
-      };
-      console.log(payload);
-      this.saveTransferLogs(payload);
-    } catch {
-      // do nothing.
-    }
-  }
+  };
 
   onSponsorshipMint = (error: any, result: any) => {
-    if (error) {
-      return;
+    if (!error) {
+      try {
+        const payload = normalizeSponsor(result);
+        console.log(payload);
+        this.saveTransferLogs(payload);
+      } catch {
+        // do nothing.
+      }
     }
-    const {
-      transactionHash,
-      event,
-      returnValues: { videoId, sponsor, amount },
-    } = result;
-    console.log(event);
-    try {
-      const payload: Transfer = {
-        from: '0x0000000000000000000000000000000000000000',
-        to: sponsor,
-        tokenId: videoId.toString(),
-        amount: amount.toString(),
-        transactionHash,
-        timestamp: Date.now(),
-        actionType: 'Sponsor'
-      };
-      console.log(payload);
-      this.saveTransferLogs(payload);
-    } catch {
-      // do nothing.
-    }
-  }
+  };
 
-  onTrasfer = async(error: any, result: any) => {
-    if (error) {
-      return;
+  onTrasfer = async (error: any, result: any) => {
+    if (!error) {
+      try {
+        setTimeout(async () => {
+          if (!isZeroAddress(result)) {
+            const contract = this.initilizeContract();
+            const payload = await normalizeTransfer(result, contract);
+            this.saveTransferLogs(payload);
+          }
+        }, 6000);
+      } catch {
+        // do nothing.
+      }
     }
-    const {
-      event,
-      transactionHash,
-      returnValues: { from, to, tokenId },
-    } = result;
-    console.log(event, BigNumber.from(from).isZero());
-    try {
-       setTimeout(async () => {
-        if (!BigNumber.from(from).isZero()) {
-          const contract = this.initilizeContract();
-          const nftDetails = await contract.methods
-            .detailsByTokenId(tokenId)
-            .call();
-          const payload: Transfer = {
-            from,
-            to,
-            tokenId: nftDetails.details.videoId,
-            amount: '0',
-            transactionHash,
-            timestamp: Date.now(),
-            actionType: 'Transfer'
-          };
-          this.saveTransferLogs(payload);
-        }
-       }, 5000);
-    } catch {
-      // do nothing.
+  };
+
+  onTrasferStatusChange = async (error: any, result: any) => {
+    if (!error) {
+      try {
+        const payload = normalizeTransferStatus(result);
+        this.eventEmitter.emit('transfer.status.change', payload);
+      } catch {
+        // do nothing.
+      }
     }
-  }
+  };
+
+  onClaimOwnership = async (error: any, result: any) => {
+    if (!error) {
+      try {
+        const payload = normalizeClaimOwnership(result);
+        this.eventEmitter.emit('claim.owner.ship', payload);
+      } catch {
+        // do nothing.
+      }
+    }
+  };
+
+  onCommentStatusChange = async (error: any, result: any) => {
+    if (!error) {
+      try {
+        const payload = normalizeCommentStatusChange(result);
+        this.eventEmitter.emit('comment.status.change', payload);
+      } catch {
+        // do nothing.
+      }
+    }
+  };
 }
