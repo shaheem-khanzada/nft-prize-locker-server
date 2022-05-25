@@ -52,7 +52,7 @@ export class EventsGateway
   }
 
   @OnEvent('transfer.status.change')
-  handleTransferStatusChanges(payload: { status: boolean, videoId: string }) {
+  handleTransferStatusChanges(payload: { commentsActive: boolean, videoId: string, price: string }) {
     this.server.emit(`transfer-${payload.videoId}-status`, payload);
   }
 
@@ -63,6 +63,6 @@ export class EventsGateway
 
   @OnEvent('comment.status.change')
   handleCommentStatusChange(payload: any) {
-    this.server.emit(`comment-status-changed`, payload);
+    this.server.emit(`comment-status-changed-${payload.videoId}`, payload);
   }
 }

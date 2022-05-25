@@ -64,8 +64,8 @@ export const normalizeTransfer = async (result: any, contract: any) => {
 
 export const normalizeTransferStatus = (result: any) => {
   const { returnValues } = result;
-  const { videoId, status } = returnValues;
-  return { videoId, status };
+  const { videoId, status, price } = returnValues;
+  return { videoId, transferable: status, price };
 };
 
 export const normalizeClaimOwnership = (result: any) => {
@@ -76,8 +76,8 @@ export const normalizeClaimOwnership = (result: any) => {
 
 export const normalizeCommentStatusChange = (result: any) => {
   const { returnValues } = result;
-  const { operator, status, timestamp } = returnValues;
-  return { operator: operator.toLowerCase(), status, timestamp: parseInt(timestamp) * 1000 };
+  const { status, timestamp, videoId } = returnValues;
+  return { videoId, commentsActive: status, timestamp: parseInt(timestamp) * 1000 };
 };
 
 export const isZeroAddress = (result: any) => {

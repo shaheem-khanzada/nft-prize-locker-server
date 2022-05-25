@@ -165,6 +165,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeCommentStatusChange(result);
+        console.log("payload [onCommentStatusChange]", payload);
         this.eventEmitter.emit('comment.status.change', payload);
       } catch {
         // do nothing.
