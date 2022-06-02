@@ -26,10 +26,7 @@ export class SigningService {
     private httpService: HttpService,
   ) {}
 
-  getVideoById(
-    videoId: string,
-    callingfromServer: boolean = false
-  ): any {
+  getVideoById(videoId: string, callingfromServer: boolean = false): any {
     const baseUrl = this.configService.get<string>(YOUTUBE_BASE_URL);
     const apiKey = this.configService.get<string>(YOUTUBE_API_KEY);
     if (callingfromServer) {
@@ -39,14 +36,16 @@ export class SigningService {
         ),
       );
     } else {
-      return this.httpService.get(
-        `${baseUrl}/videos?id=${videoId}&key=${apiKey}&part=snippet,contentDetails,statistics,status`,
-      ).pipe(
-        map(response => response.data),
-        catchError(() => {
-          throw new HttpException('Video Not Found', HttpStatus.NOT_FOUND)
-        })
-      )
+      return this.httpService
+        .get(
+          `${baseUrl}/videos?id=${videoId}&key=${apiKey}&part=snippet,contentDetails,statistics,status`,
+        )
+        .pipe(
+          map((response) => response.data),
+          catchError(() => {
+            throw new HttpException('Video Not Found', HttpStatus.NOT_FOUND);
+          }),
+        );
     }
   }
 
@@ -55,6 +54,9 @@ export class SigningService {
     const regularPrice: number = parseInt(viewCount) * 0.001;
     const reducedPrice: any =
       parseFloat((regularPrice / 1000).toFixed(3)) * 1000;
+    if (reducedPrice < 1.2) {
+      return web3.utils.toWei('1.20');
+    }
     return web3.utils.toWei(reducedPrice.toString());
   }
 
@@ -68,7 +70,7 @@ export class SigningService {
 
     const video = normalizeVideoData(items);
 
-    if(SignTypes[type] === SignTypes.acquire && !tokenId) {
+    if (SignTypes[type] === SignTypes.acquire && !tokenId) {
       throw new BadRequestException('Required TokenId');
     }
 
@@ -77,7 +79,9 @@ export class SigningService {
     }
 
     if (!(SignTypes[type] === type)) {
-      throw new BadRequestException('Sign types must be one of [mint, acquire, sponsor]');
+      throw new BadRequestException(
+        'Sign types must be one of [mint, acquire, sponsor]',
+      );
     }
 
     if (!Object.keys(video || {}).length) {
