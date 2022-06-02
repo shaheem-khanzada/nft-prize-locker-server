@@ -54,7 +54,7 @@ export class SigningService {
     const regularPrice: number = parseInt(viewCount) * 0.001;
     const reducedPrice: any =
       parseFloat((regularPrice / 1000).toFixed(3)) * 1000;
-    if (reducedPrice < 1.2) {
+    if (reducedPrice < 1.20) {
       return web3.utils.toWei('1.20');
     }
     return web3.utils.toWei(reducedPrice.toString());
