@@ -77,7 +77,14 @@ export const normalizeClaimOwnership = (result: any) => {
 export const normalizeCommentStatusChange = (result: any) => {
   const { returnValues } = result;
   const { status, timestamp, videoId, operator } = returnValues;
-  return { operator: operator.toLowerCase(), videoId, commentsActive: status, timestamp: parseInt(timestamp) * 1000 };
+  return {
+    status: {
+      closedBy: operator.toLowerCase(),
+      timestamp: parseInt(timestamp) * 1000
+    },
+    videoId, 
+    commentsActive: status, 
+    timestamp: parseInt(timestamp) * 1000 };
 };
 
 export const isZeroAddress = (result: any) => {
