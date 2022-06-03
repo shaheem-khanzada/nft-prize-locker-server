@@ -83,8 +83,8 @@ export const normalizeCommentStatusChange = (result: any) => {
       timestamp: parseInt(timestamp) * 1000
     },
     videoId, 
-    commentsActive: status, 
-    timestamp: parseInt(timestamp) * 1000 };
+    commentsActive: status
+  };
 };
 
 export const isZeroAddress = (result: any) => {
