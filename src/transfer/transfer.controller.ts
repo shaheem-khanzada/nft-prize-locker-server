@@ -11,7 +11,7 @@ export class TransferController {
     contract.events.Acquire({ fromBlock: 'latest' }, this.transferService.onAcquire);
     contract.events.Transfer({ fromBlock: 'latest' }, this.transferService.onTrasfer);
     contract.events.SponsorshipMint({ fromBlock: 'latest' }, this.transferService.onSponsorshipMint);
-    contract.events.Mint({ fromBlock: 'latest' }, this.transferService.onMint);
+    // contract.events.Mint({ fromBlock: 'latest' }, this.transferService.onMint);
     contract.events.ClaimSponsorship({ fromBlock: 'latest' }, this.transferService.onClaimOwnership);
     contract.events.SetTransferable({ fromBlock: 'latest' }, this.transferService.onTrasferStatusChange);
     contract.events.CommentStatusChanged({ fromBlock: 'latest' }, this.transferService.onCommentStatusChange);

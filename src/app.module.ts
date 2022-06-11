@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { HistoricalModule } from './historical/historical.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TransferModule } from './transfer/transfer.module';
@@ -28,7 +29,8 @@ import { EventsModule } from './events/events.module';
     TransferModule,
     SigningModule,
     EventsModule,
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot()
   ],
   controllers: [],
   providers: [],

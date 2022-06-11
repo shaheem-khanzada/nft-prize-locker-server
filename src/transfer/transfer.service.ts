@@ -8,6 +8,7 @@ import { BLOCKCHAIN_NETWORK_URL, CONTRACT_ADDRESS } from 'src/constant';
 import { socialNftAbi } from 'src/contracts/abi';
 import { ParamsDto } from './dto/params';
 import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
 import {
   isZeroAddress,
   normalizeAcquire,
@@ -61,7 +62,7 @@ export class TransferService {
     );
     const web3 = new Web3(new Web3.providers.WebsocketProvider(wssProviderUrl));
     return new web3.eth.Contract(
-      socialNftAbi,
+      socialNftAbi as AbiItem[],
       this.configService.get<string>(CONTRACT_ADDRESS),
     );
   }

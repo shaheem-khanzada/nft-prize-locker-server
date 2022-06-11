@@ -6,5 +6,7 @@ export default () => ({
     contractAddress: process.env.CONTRACT_ADDRESS,
     walletPrivateKey: process.env.WALLET_PRIVATE_KEY,
     youtubeBaseUrl: "https://www.googleapis.com/youtube/v3",
-    youtubeApiKey: process.env.YOUTUBE_API_KEY
+    youtubeApiKey: process.env.YOUTUBE_API_KEY,
+    tokenAddress: process.env.TOKEN_ADDRESS,
+    httpsInfuraUrl: process.env.RCP_URL_HTTPS
 });
