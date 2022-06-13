@@ -57,10 +57,35 @@ export class TransferService {
   }
 
   initilizeContract() {
+    console.log(
+      'contract address',
+      this.configService.get<string>(CONTRACT_ADDRESS),
+    );
     const wssProviderUrl = this.configService.get<string>(
       BLOCKCHAIN_NETWORK_URL,
     );
-    const web3 = new Web3(new Web3.providers.WebsocketProvider(wssProviderUrl));
+    console.log('wssProviderUrl', wssProviderUrl);
+
+    const options = {
+      timeout: 30000, // ms
+      clientConfig: {
+        // Useful if requests are large
+        maxReceivedFrameSize: 100000000, // bytes - default: 1MiB
+        maxReceivedMessageSize: 100000000, // bytes - default: 8MiB
+        // Useful to keep a connection alive
+        keepalive: true,
+        keepaliveInterval: -1, // ms
+      },
+      // Enable auto reconnection
+      reconnect: {
+        auto: true,
+        delay: 2000, // ms
+        maxAttempts: 100,
+        onTimeout: false,
+      },
+    };
+
+    const web3 = new Web3(new Web3.providers.WebsocketProvider(wssProviderUrl, options));
     return new web3.eth.Contract(
       socialNftAbi as AbiItem[],
       this.configService.get<string>(CONTRACT_ADDRESS),
@@ -89,6 +114,9 @@ export class TransferService {
   };
 
   onAcquire = (error: any, result: any) => {
+    if (error) {
+      console.log('Error onAcquire', error);
+    }
     if (!error) {
       try {
         const payload = normalizeAcquire(result);
@@ -113,10 +141,13 @@ export class TransferService {
   };
 
   onSponsorshipMint = (error: any, result: any) => {
+    if (error) {
+      console.log('Error onSponsorshipMint', error);
+    }
     if (!error) {
       try {
         const payload = normalizeSponsor(result);
-        console.log(payload);
+        console.log('onSponsorshipMint', payload);
         this.saveTransferLogs(payload);
       } catch {
         // do nothing.
@@ -125,12 +156,16 @@ export class TransferService {
   };
 
   onTrasfer = async (error: any, result: any) => {
+    if (error) {
+      console.log('Error onTrasfer', error);
+    }
     if (!error) {
       try {
         setTimeout(async () => {
           if (!isZeroAddress(result)) {
             const contract = this.initilizeContract();
             const payload = await normalizeTransfer(result, contract);
+            console.log('onTrasfer', payload);
             this.saveTransferLogs(payload);
           }
         }, 6000);
@@ -141,9 +176,13 @@ export class TransferService {
   };
 
   onTrasferStatusChange = async (error: any, result: any) => {
+    if (error) {
+      console.log('Error onTrasferStatusChange', error);
+    }
     if (!error) {
       try {
         const payload = normalizeTransferStatus(result);
+        console.log('onTrasferStatusChange', payload);
         this.eventEmitter.emit('transfer.status.change', payload);
       } catch {
         // do nothing.
@@ -152,9 +191,13 @@ export class TransferService {
   };
 
   onClaimOwnership = async (error: any, result: any) => {
+    if (error) {
+      console.log('Error onClaimOwnership', error);
+    }
     if (!error) {
       try {
         const payload = normalizeClaimOwnership(result);
+        console.log('onClaimOwnership', payload);
         this.eventEmitter.emit('claim.owner.ship', payload);
       } catch {
         // do nothing.
@@ -163,10 +206,13 @@ export class TransferService {
   };
 
   onCommentStatusChange = async (error: any, result: any) => {
+    if (error) {
+      console.log('Error onCommentStatusChange', error);
+    }
     if (!error) {
       try {
         const payload = normalizeCommentStatusChange(result);
-        console.log("payload [onCommentStatusChange]", payload);
+        console.log('payload [onCommentStatusChange]', payload);
         this.eventEmitter.emit('comment.status.change', payload);
       } catch {
         // do nothing.
