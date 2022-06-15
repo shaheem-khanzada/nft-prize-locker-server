@@ -52,10 +52,9 @@ export class SigningService {
   getMintingPrice(viewCount: string) {
     const web3 = new Web3();
     const regularPrice: number = parseInt(viewCount) * 0.001;
-    const reducedPrice: any =
-      parseFloat((regularPrice / 1000).toFixed(3)) * 1000;
-    if (reducedPrice < 1.20) {
-      return web3.utils.toWei('1.20');
+    const reducedPrice: any = parseFloat((regularPrice / 100).toFixed(3)) * 100;
+    if (reducedPrice < 1) {
+      return web3.utils.toWei('1.00');
     }
     return web3.utils.toWei(reducedPrice.toString());
   }
