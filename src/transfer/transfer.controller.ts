@@ -7,7 +7,25 @@ import { ParamsDto } from './dto/params';
 @Controller('transfer/logs')
 export class TransferController {
   constructor(private readonly transferService: TransferService) {
-    const contract = this.transferService.initilizeContract();
+    const { contract, provider } = this.transferService.initilizeContract();
+
+    // @ts-ignore
+    provider.on('close', (error: any) => {
+      console.error(`WebSocket connection closed. Error code ${error.code}, reason "${error.reason}"`);
+    });
+
+    provider.on('connect', () => { console.log('[Provider Connect]') });
+
+    // @ts-ignore
+    provider.on('error', e => {
+      console.error('[Provider Error]', e);
+    })
+    
+    // @ts-ignore
+    provider.on('end', e => {
+      console.error('[Provider End]', e);
+    })
+
     contract.events.Acquire({ fromBlock: 'latest' }, this.transferService.onAcquire);
     contract.events.Transfer({ fromBlock: 'latest' }, this.transferService.onTrasfer);
     contract.events.SponsorshipMint({ fromBlock: 'latest' }, this.transferService.onSponsorshipMint);

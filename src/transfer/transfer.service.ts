@@ -57,14 +57,9 @@ export class TransferService {
   }
 
   initilizeContract() {
-    console.log(
-      'contract address',
-      this.configService.get<string>(CONTRACT_ADDRESS),
-    );
     const wssProviderUrl = this.configService.get<string>(
       BLOCKCHAIN_NETWORK_URL,
     );
-    console.log('wssProviderUrl', wssProviderUrl);
 
     const options = {
       timeout: 30000, // ms
@@ -80,16 +75,17 @@ export class TransferService {
       reconnect: {
         auto: true,
         delay: 2000, // ms
-        maxAttempts: 100,
+        maxAttempts: 10,
         onTimeout: false,
       },
     };
-
-    const web3 = new Web3(new Web3.providers.WebsocketProvider(wssProviderUrl, options));
-    return new web3.eth.Contract(
+    const provider = new Web3.providers.WebsocketProvider(wssProviderUrl, options);
+    const web3 = new Web3(provider);
+    const contract = new web3.eth.Contract(
       socialNftAbi as AbiItem[],
       this.configService.get<string>(CONTRACT_ADDRESS),
-    );
+    )
+    return { contract, provider };
   }
 
   saveTransferLogs = async (payload: Transfer) => {
@@ -120,7 +116,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeAcquire(result);
-        console.log(payload);
+        console.log('onAcquire');
         this.saveTransferLogs(payload);
       } catch {
         // do nothing.
@@ -132,7 +128,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeMint(result);
-        console.log(payload);
+        console.log('onMint');
         this.saveTransferLogs(payload);
       } catch {
         // do nothing.
@@ -147,7 +143,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeSponsor(result);
-        console.log('onSponsorshipMint', payload);
+        console.log('onSponsorshipMint');
         this.saveTransferLogs(payload);
       } catch {
         // do nothing.
@@ -163,9 +159,9 @@ export class TransferService {
       try {
         setTimeout(async () => {
           if (!isZeroAddress(result)) {
-            const contract = this.initilizeContract();
+            const { contract } = this.initilizeContract();
             const payload = await normalizeTransfer(result, contract);
-            console.log('onTrasfer', payload);
+            console.log('onTrasfer');
             this.saveTransferLogs(payload);
           }
         }, 6000);
@@ -182,7 +178,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeTransferStatus(result);
-        console.log('onTrasferStatusChange', payload);
+        console.log('onTrasferStatusChange');
         this.eventEmitter.emit('transfer.status.change', payload);
       } catch {
         // do nothing.
@@ -197,7 +193,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeClaimOwnership(result);
-        console.log('onClaimOwnership', payload);
+        console.log('onClaimOwnership');
         this.eventEmitter.emit('claim.owner.ship', payload);
       } catch {
         // do nothing.
@@ -212,7 +208,7 @@ export class TransferService {
     if (!error) {
       try {
         const payload = normalizeCommentStatusChange(result);
-        console.log('payload [onCommentStatusChange]', payload);
+        console.log('[onCommentStatusChange]');
         this.eventEmitter.emit('comment.status.change', payload);
       } catch {
         // do nothing.
