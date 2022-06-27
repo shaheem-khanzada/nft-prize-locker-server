@@ -10,27 +10,29 @@ import { MONGODB_URI } from './constant';
 import { SigningModule } from './signing/signing.module';
 import { EventsModule } from './events/events.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: `${process.cwd()}/${process.env.NODE_ENV}.env`,
       load: [configuration],
-      isGlobal: true
+      isGlobal: true,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>(MONGODB_URI),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        console.log('MONGODB_URI', configService.get<string>(MONGODB_URI));
+        return {
+          uri: configService.get<string>(MONGODB_URI),
+        };
+      },
       inject: [ConfigService],
     }),
-    HistoricalModule, 
+    HistoricalModule,
     TransferModule,
     SigningModule,
     EventsModule,
     EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot()
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [],
