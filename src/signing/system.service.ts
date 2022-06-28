@@ -61,9 +61,9 @@ export class SystemBuyService {
     return [contract, signer];
   }
 
-  @Cron(CronExpression.EVERY_12_HOURS)
+  @Cron(CronExpression.EVERY_HOUR)
   handleCron() {
-    this.logger.debug('Called when the current second is 45');
+    this.logger.debug('Called after each one hour');
     this.systemBuy();
   }
 
@@ -107,6 +107,8 @@ export class SystemBuyService {
     return result;
   };
 
+  sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
   async systemBuy() {
     console.log('running system buy');
     try {
@@ -144,9 +146,10 @@ export class SystemBuyService {
         let oneWeek = 604800;
         // 12 hours for testing porpuses, CHANGE IF STATEMENT twelveHours TO oneWeek ON LAUNCH.
         let twelveHours = 43200;
+        let oneHour = 3600;
 
         // Check if video approve for system buy, CHANGE IF STATEMENT twelveHours TO oneWeek ON LAUNCH.
-        if (views > 1000 && timeOnMarket > twelveHours) {
+        if (views > 1000 && timeOnMarket > oneHour) {
           // Price calcultion.
           const regularPrice = Number(views) * 0.001;
           let reducedPrice =
@@ -175,11 +178,12 @@ export class SystemBuyService {
               price,
               messageHash,
               signature,
-              { gasLimit: 300000 },
             );
 
             // Waiting for the receipt.
             let receipt = await tx.wait();
+
+            await this.sleep(60000);
 
             console.log(
               `Bought tokenId ${el.toString()}, tx hash: ${
