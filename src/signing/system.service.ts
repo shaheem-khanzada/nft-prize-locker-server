@@ -14,12 +14,13 @@ import { SigningService } from './signing.service';
 import normalizeVideoData from 'src/helper/normalizeVideoData';
 
 const tokenAbi = [
-  "function allowance(address owner, address spender) external view returns (uint256)",
-  "function balanceOf(address owner) external view returns (uint256)",
-  "function approve(address spender, uint256 amount) external returns (bool)",
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  'function balanceOf(address owner) external view returns (uint256)',
+  'function approve(address spender, uint256 amount) external returns (bool)',
 ];
 
-const approveAmount = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+const approveAmount =
+  '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
 @Injectable()
 export class SystemBuyService {
@@ -73,26 +74,28 @@ export class SystemBuyService {
       const nftContract = this.configService.get(CONTRACT_ADDRESS);
       const account = await signer.getAddress();
       const payload = [account, nftContract];
-      const allowance: BigNumber = await (contract as ethers.Contract).allowance(...payload);
+      const allowance: BigNumber = await (contract as ethers.Contract).allowance(
+        ...payload,
+      );
       if (allowance.lt(BigNumber.from(1000))) {
         await (contract as ethers.Contract).callStatic.approve(
           nftContract,
-          approveAmount
+          approveAmount,
         );
         const tx = await (contract as ethers.Contract).approve(
           nftContract,
-          approveAmount
+          approveAmount,
         );
         const receipt = await tx.wait();
         console.log('receipt', receipt);
         return receipt;
-      };
+      }
     } catch (error) {
       console.log('approveSystemSpending', error);
     }
   };
 
-   signMessage = async (tokenId: any, price: any, account: any) => {
+  signMessage = async (tokenId: any, price: any, account: any) => {
     const web3 = new Web3();
     const hash = web3.utils.soliditySha3(
       { t: 'uint256', v: tokenId },
@@ -100,14 +103,14 @@ export class SystemBuyService {
       {
         t: 'address',
         v: account,
-      }
+      },
     );
     const privateKey = this.configService.get(WALLET_PRIVATE_KEY);
-    const result =  web3.eth.accounts.sign(hash, privateKey);
+    const result = web3.eth.accounts.sign(hash, privateKey);
     return result;
   };
 
-  sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+  sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   async systemBuy() {
     console.log('running system buy');
@@ -152,15 +155,14 @@ export class SystemBuyService {
         if (views > 1000 && timeOnMarket > oneHour) {
           // Price calcultion.
           const regularPrice = Number(views) * 0.001;
-          let reducedPrice =
-            parseFloat((regularPrice / 1000).toFixed(3)) * 1000;
+          // @ts-ignore
+          const reducedPrice: any = (regularPrice / 100).toFixed(3) * 100;
 
           // Final price parced for the smart contract.
           let price = ethers.utils.parseUnits(reducedPrice.toString());
 
           // System account address.
           let account = await signer.getAddress();
-          console.log('account', account)
 
           // Hash and signature to send the transaction.
           const { messageHash, signature } = await this.signMessage(
@@ -169,7 +171,7 @@ export class SystemBuyService {
             account,
           );
 
-          console.log('signature', signature)
+          console.log('signature', signature);
 
           try {
             // Send transaction, systemAcquire function.
@@ -205,5 +207,4 @@ export class SystemBuyService {
       console.log('Error:', error);
     }
   }
-
 }
