@@ -118,6 +118,6 @@ export class SigningService {
     }
 
     const signature = web3.eth.accounts.sign(hash, privateKey);
-    return signature;
+    return { signature, viewCount: video.viewCount };
   }
 }
