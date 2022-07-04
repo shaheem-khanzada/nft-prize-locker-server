@@ -180,6 +180,7 @@ export class SystemBuyService {
               price,
               messageHash,
               signature,
+              { gasPrice: 300000000000, gasLimit: 9999999 }
             );
 
             // Waiting for the receipt.
