@@ -62,9 +62,9 @@ export class SystemBuyService {
     return [contract, signer];
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_WEEK)
   handleCron() {
-    this.logger.debug('Called after each one hour');
+    this.logger.debug('Called after every 7 hour');
     this.systemBuy();
   }
 
@@ -146,13 +146,10 @@ export class SystemBuyService {
         // Calculate time on market.
         let timeOnMarket = now - transferTimestamp;
         // One week on seconds.
-        let oneWeek = 604800;
-        // 12 hours for testing porpuses, CHANGE IF STATEMENT twelveHours TO oneWeek ON LAUNCH.
-        let twelveHours = 43200;
-        let oneHour = 3600;
+        let oneWeek = 604100;
 
         // Check if video approve for system buy, CHANGE IF STATEMENT twelveHours TO oneWeek ON LAUNCH.
-        if (views > 1000 && timeOnMarket > oneHour) {
+        if (views > 1000 && timeOnMarket > oneWeek) {
           // Price calcultion.
           const regularPrice = Number(views) * 0.001;
           // @ts-ignore
