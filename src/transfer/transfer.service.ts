@@ -60,7 +60,7 @@ export class TransferService {
     const wssProviderUrl = this.configService.get<string>(
       BLOCKCHAIN_NETWORK_URL,
     );
-
+    console.log("wssProviderUrl", wssProviderUrl);
     const options = {
       timeout: 30000, // ms
       clientConfig: {
