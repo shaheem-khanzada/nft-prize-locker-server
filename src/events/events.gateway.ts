@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Historical } from 'src/schemas/historical.schema';
 import { Transfer } from 'src/schemas/transfer.schema';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({ cors: { origin: '*' }, transports: ['websocket'] })
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() public server: Server;
