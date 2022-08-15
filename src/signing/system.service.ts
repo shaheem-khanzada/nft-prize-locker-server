@@ -137,11 +137,9 @@ export class SystemBuyService {
         } = await (contractInstance as ethers.Contract).NFTdetails(el);
 
         // Get youtube video views.
-        const {
-          data: { items },
-        } = await this.signingService.getVideoById(videoId, true);
+        const { data: video } = await this.signingService.getVideoById(videoId, true);
 
-        const views = normalizeVideoData(items).viewCount;
+        const views = video.viewCount;
 
         // Calculate time on market.
         let timeOnMarket = now - transferTimestamp;

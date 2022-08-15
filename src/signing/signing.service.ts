@@ -1,13 +1,13 @@
 import {
   BadRequestException,
-  HttpCode,
   HttpException,
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { AxiosResponse } from 'axios';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { catchError, firstValueFrom, map, Observable } from 'rxjs';
+import { catchError, firstValueFrom, map } from 'rxjs';
 import {
   WALLET_PRIVATE_KEY,
   YOUTUBE_BASE_URL,
@@ -18,17 +18,42 @@ import { HttpService } from '@nestjs/axios';
 import normalizeVideoData from 'src/helper/normalizeVideoData';
 import { SignBody } from './dto/signBody';
 import { SignTypes } from 'src/constant/enums';
+import { Video, VideoDocument } from 'src/schemas/video.schema';
 
 @Injectable()
 export class SigningService {
   constructor(
+    @InjectModel(Video.name) private videoModel: Model<VideoDocument>,
     private configService: ConfigService,
     private httpService: HttpService,
   ) {}
 
-  getVideoById(videoId: string, callingfromServer: boolean = false): any {
+  async saveVideoDetails(video: any) {
+    const isAlreadyExist = await this.findOneByVideoId(
+      video.videoId,
+    );
+    if (isAlreadyExist) {
+      throw new HttpException(
+        `Video with id ${video.videoId} already exist`,
+        HttpStatus.FOUND,
+      );
+    }
+    const newTransferLog = new this.videoModel(video);
+    return newTransferLog.save();
+  }
+
+  findOneByVideoId(videoId: string): Promise<Video> {
+    return this.videoModel.findOne({ videoId }).exec();
+  }
+
+  async getVideoById(videoId: string, callingfromServer: boolean = false): Promise<any> {
+    const video = await this.findOneByVideoId(
+      videoId,
+    );
+    
     const baseUrl = this.configService.get<string>(YOUTUBE_BASE_URL);
     const apiKey = this.configService.get<string>(YOUTUBE_API_KEY);
+
     if (callingfromServer) {
       return firstValueFrom(
         this.httpService.get(
@@ -41,7 +66,7 @@ export class SigningService {
           `${baseUrl}/videos?id=${videoId}&key=${apiKey}&part=snippet,contentDetails,statistics,status`,
         )
         .pipe(
-          map((response) => response.data),
+          map((response) => normalizeVideoData(response.data.items, video)),
           catchError(() => {
             throw new HttpException('Video Not Found', HttpStatus.NOT_FOUND);
           }),
@@ -64,11 +89,8 @@ export class SigningService {
     const { videoId, account, tokenId, type } = body;
     const web3 = new Web3();
 
-    const {
-      data: { items },
-    } = await this.getVideoById(videoId, true);
+    const { data: video } = await this.getVideoById(videoId, true);
 
-    const video = normalizeVideoData(items);
 
     if (SignTypes[type] === SignTypes.acquire && !tokenId) {
       throw new BadRequestException('Required TokenId');
