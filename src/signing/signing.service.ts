@@ -55,11 +55,12 @@ export class SigningService {
     const apiKey = this.configService.get<string>(YOUTUBE_API_KEY);
 
     if (callingfromServer) {
-      return firstValueFrom(
+      const response = await firstValueFrom(
         this.httpService.get(
           `${baseUrl}/videos?id=${videoId}&key=${apiKey}&part=snippet,contentDetails,statistics,status`,
         ),
       );
+      return normalizeVideoData(response.data.items, video);
     } else {
       return this.httpService
         .get(
@@ -89,8 +90,7 @@ export class SigningService {
     const { videoId, account, tokenId, type } = body;
     const web3 = new Web3();
 
-    const { data: video } = await this.getVideoById(videoId, true);
-
+    const video = await this.getVideoById(videoId, true);
 
     if (SignTypes[type] === SignTypes.acquire && !tokenId) {
       throw new BadRequestException('Required TokenId');

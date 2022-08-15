@@ -137,7 +137,7 @@ export class SystemBuyService {
         } = await (contractInstance as ethers.Contract).NFTdetails(el);
 
         // Get youtube video views.
-        const { data: video } = await this.signingService.getVideoById(videoId, true);
+        const video = await this.signingService.getVideoById(videoId, true);
 
         const views = video.viewCount;
 
