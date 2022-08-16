@@ -13,7 +13,7 @@ export class Video {
 
   @IsNotEmpty()
   @Prop({ required: true })
-  viewCount: string;
+  transferViewCount: string;
 
 }
 

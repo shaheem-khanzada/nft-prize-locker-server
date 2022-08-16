@@ -7,5 +7,5 @@ export class VideoBody {
 
   @IsNotEmpty()
   @IsString()
-  viewCount: string;
+  transferViewCount: string;
 }

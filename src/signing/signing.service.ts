@@ -29,28 +29,28 @@ export class SigningService {
   ) {}
 
   async saveVideoDetails(video: any) {
-    const isAlreadyExist = await this.findOneByVideoId(
-      video.videoId,
-    );
+    const isAlreadyExist = await this.findOneByVideoId(video.videoId);
     if (isAlreadyExist) {
-      throw new HttpException(
-        `Video with id ${video.videoId} already exist`,
-        HttpStatus.FOUND,
-      );
+      return this.videoModel
+        .findOneAndUpdate({ videoId: video.videoId }, video, {
+          new: true,
+        })
+        .exec();
     }
-    const newTransferLog = new this.videoModel(video);
-    return newTransferLog.save();
+    const newVideo = new this.videoModel(video);
+    return newVideo.save();
   }
 
   findOneByVideoId(videoId: string): Promise<Video> {
     return this.videoModel.findOne({ videoId }).exec();
   }
 
-  async getVideoById(videoId: string, callingfromServer: boolean = false): Promise<any> {
-    const video = await this.findOneByVideoId(
-      videoId,
-    );
-    
+  async getVideoById(
+    videoId: string,
+    callingfromServer: boolean = false,
+  ): Promise<any> {
+    const video = await this.findOneByVideoId(videoId);
+
     const baseUrl = this.configService.get<string>(YOUTUBE_BASE_URL);
     const apiKey = this.configService.get<string>(YOUTUBE_API_KEY);
 
@@ -80,8 +80,8 @@ export class SigningService {
     const regularPrice: number = Number(viewCount) * 0.001;
     // @ts-ignore
     const reducedPrice: any = (regularPrice / 100).toFixed(3) * 100;
-    if (reducedPrice < 1) {
-      return web3.utils.toWei('1.00');
+    if (reducedPrice < 1.20) {
+      return web3.utils.toWei('1.20');
     }
     return web3.utils.toWei(reducedPrice.toString());
   }
@@ -127,7 +127,7 @@ export class SigningService {
     if (type === 'acquire') {
       hash = web3.utils.soliditySha3(
         { t: 'uint256', v: tokenId },
-        { t: 'uint256', v: this.getMintingPrice(video.viewCount) },
+        { t: 'uint256', v: this.getMintingPrice(video?.transferViewCount || video.viewCount) },
         { t: 'address', v: account },
       );
     }
