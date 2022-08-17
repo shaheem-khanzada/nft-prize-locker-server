@@ -71,7 +71,14 @@ export class SigningService {
           `${baseUrl}/videos?id=${videoId}&key=${apiKey}&part=snippet,contentDetails,statistics,status`,
         )
         .pipe(
-          map((response) => normalizeVideoData(response.data.items, video)),
+          map((response) => {
+            const vid = normalizeVideoData(response.data.items, video);
+            if (Object.keys(vid || {}).length) {
+              this.eventEmitter.emit('videoUpdated', { ...vid, videoId });
+              return vid;
+            }
+            throw new HttpException('Video Not Found', HttpStatus.NOT_FOUND);
+          }),
           catchError(() => {
             throw new HttpException('Video Not Found', HttpStatus.NOT_FOUND);
           }),
