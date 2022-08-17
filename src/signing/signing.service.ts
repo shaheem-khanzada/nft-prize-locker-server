@@ -19,6 +19,7 @@ import normalizeVideoData from 'src/helper/normalizeVideoData';
 import { SignBody } from './dto/signBody';
 import { SignTypes } from 'src/constant/enums';
 import { Video, VideoDocument } from 'src/schemas/video.schema';
+import { EventEmitter2 as EventEmitter } from '@nestjs/event-emitter';
 
 @Injectable()
 export class SigningService {
@@ -26,11 +27,13 @@ export class SigningService {
     @InjectModel(Video.name) private videoModel: Model<VideoDocument>,
     private configService: ConfigService,
     private httpService: HttpService,
+    private eventEmitter: EventEmitter
   ) {}
 
   async saveVideoDetails(video: any) {
     const isAlreadyExist = await this.findOneByVideoId(video.videoId);
     if (isAlreadyExist) {
+      this.eventEmitter.emit('videoUpdated', video);
       return this.videoModel
         .findOneAndUpdate({ videoId: video.videoId }, video, {
           new: true,
@@ -38,6 +41,7 @@ export class SigningService {
         .exec();
     }
     const newVideo = new this.videoModel(video);
+    this.eventEmitter.emit('videoUpdated', video);
     return newVideo.save();
   }
 
@@ -81,7 +85,7 @@ export class SigningService {
     // @ts-ignore
     const reducedPrice: any = (regularPrice / 100).toFixed(3) * 100;
     if (reducedPrice < 1.20) {
-      return web3.utils.toWei('1.20');
+      return web3.utils.toWei('1.00');
     }
     return web3.utils.toWei(reducedPrice.toString());
   }
@@ -140,6 +144,8 @@ export class SigningService {
     }
 
     const signature = web3.eth.accounts.sign(hash, privateKey);
-    return { signature, viewCount: video.viewCount };
+    const videoPayload = { viewCount: video.viewCount, videoId };
+    this.eventEmitter.emit('videoUpdated', videoPayload);
+    return { signature };
   }
 }

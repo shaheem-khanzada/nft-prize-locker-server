@@ -65,4 +65,9 @@ export class EventsGateway
   handleCommentStatusChange(payload: any) {
     this.server.emit(`comment-status-changed-${payload.videoId}`, payload);
   }
+
+  @OnEvent('videoUpdated')
+  handleVideoViewsChange(payload: any) {
+    this.server.emit(`video-views-changed-${payload.videoId}`, payload);
+  }
 }
