@@ -1,38 +1,78 @@
 import { Param } from '@nestjs/common';
 import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Transfer } from 'src/schemas/transfer.schema';
 import { TransferService } from './transfer.service';
 import { ParamsDto } from './dto/params';
 
 @Controller('transfer/logs')
 export class TransferController {
+  subscription: any = null;
+  contract: any = null;
+  provider: any = null;
   constructor(private readonly transferService: TransferService) {
     const { contract, provider } = this.transferService.initilizeContract();
+    this.provider = provider;
+    this.contract = contract;
+    this.subscribeProviderEvents();
+    this.subscribeContractEvents();
+  }
 
-    // @ts-ignore
-    provider.on('close', (error: any) => {
-      console.error(`WebSocket connection closed. Error code ${error.code}, reason "${error.reason}"`);
+  subscribeProviderEvents() {
+    this.provider.on('connect', () => {
+      console.log('[Provider Connected]', this.provider.connected);
     });
+  };
 
-    provider.on('connect', () => { console.log('[Provider Connect]') });
+  async subscribeContractEvents() {
+    if (this.subscription !== null) return;
+    console.log("Subscribing Contract Events");
+    const latestBlock = await this.transferService.getBlock('latest');
+    console.log('Latest Block Number', latestBlock.number);
+    this.subscription = this.contract.events.allEvents(
+      { fromBlock: latestBlock.number - 1 },
+      (error: any, result: any) => {
+        switch (result?.event) {
+          case 'Acquire':
+            this.transferService.onAcquire(result);
+            break;
+          case 'Transfer':
+            this.transferService.onTrasfer(result);
+            break;
+          case 'SponsorshipMint':
+            this.transferService.onSponsorshipMint(result);
+            break;
+          case 'ClaimSponsorship':
+            this.transferService.onClaimOwnership(result);
+            break;
+          case 'SetTransferable':
+            this.transferService.onTrasferStatusChange(result);
+            break;
+          case 'CommentStatusChanged':
+            this.transferService.onCommentStatusChange(result);
+            break;
+          default:
+            console.log('events error', error);
+        }
+      },
+    );
+  }
 
-    // @ts-ignore
-    provider.on('error', e => {
-      console.error('[Provider Error]', e);
-    })
-    
-    // @ts-ignore
-    provider.on('end', e => {
-      console.error('[Provider End]', e);
-    })
+  unsubscribeContractEvents() {
+    if (this.subscription && this.subscription.unsubscribe) {
+      this.subscription.unsubscribe((_: any, success: any) => {
+        if (success) {
+          console.log('Successfully unsubscribed!', success);
+          this.subscription = null;
+          this.subscribeContractEvents();
+        }
+      });
+    }
+  }
 
-    contract.events.Acquire({ fromBlock: 'latest' }, this.transferService.onAcquire);
-    contract.events.Transfer({ fromBlock: 'latest' }, this.transferService.onTrasfer);
-    contract.events.SponsorshipMint({ fromBlock: 'latest' }, this.transferService.onSponsorshipMint);
-    // contract.events.Mint({ fromBlock: 'latest' }, this.transferService.onMint);
-    contract.events.ClaimSponsorship({ fromBlock: 'latest' }, this.transferService.onClaimOwnership);
-    contract.events.SetTransferable({ fromBlock: 'latest' }, this.transferService.onTrasferStatusChange);
-    contract.events.CommentStatusChanged({ fromBlock: 'latest' }, this.transferService.onCommentStatusChange);
+  @Cron(CronExpression.EVERY_5_HOURS)
+  async handleEvents() {
+    this.unsubscribeContractEvents();
   }
 
   @Post()

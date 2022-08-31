@@ -11,7 +11,6 @@ import {
 } from 'src/constant';
 import { socialNftAbi } from 'src/contracts/abi';
 import { SigningService } from './signing.service';
-import normalizeVideoData from 'src/helper/normalizeVideoData';
 
 const tokenAbi = [
   'function allowance(address owner, address spender) external view returns (uint256)',

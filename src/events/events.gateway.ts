@@ -1,30 +1,20 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Logger } from 'ethers/lib/utils';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Historical } from 'src/schemas/historical.schema';
 import { Transfer } from 'src/schemas/transfer.schema';
 
 @WebSocketGateway({ cors: { origin: '*' }, transports: ['websocket'] })
 export class EventsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayInit {
   @WebSocketServer() public server: Server;
 
   private logger: Logger = new Logger('NFT-Prize-Locker');
-
-  handleDisconnect(client: Socket) {
-    this.logger.info(`clinet disconnected ${client.id}`);
-  }
-
-  handleConnection(client: Socket) {
-    this.logger.info(`clinet connected ${client.id}`);
-  }
 
   afterInit() {
     this.logger.info('Events Initilized');
@@ -32,7 +22,6 @@ export class EventsGateway
 
   @OnEvent('log.created')
   handleLogCreated(payload: Transfer) {
-    console.log('payload', payload);
     this.server.emit(`watch-${payload.tokenId}-logs`, payload);
   }
 

@@ -117,7 +117,7 @@ export class SigningService {
       );
     }
 
-    if (!Object.keys(video || {}).length) {
+    if (!Object.keys(video || {}).length || !video.viewCount) {
       throw new HttpException(
         `Video Not Found by id: ${videoId}`,
         HttpStatus.NOT_FOUND,
