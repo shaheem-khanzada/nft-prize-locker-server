@@ -11,6 +11,11 @@ export class TransferController {
   contract: any = null;
   provider: any = null;
   constructor(private readonly transferService: TransferService) {
+      this.initlizeWebSocketListeners();
+  }
+
+  initlizeWebSocketListeners() {
+    console.log("Subscribing Events");
     const { contract, provider } = this.transferService.initilizeContract();
     this.provider = provider;
     this.contract = contract;
@@ -22,15 +27,18 @@ export class TransferController {
     this.provider.on('connect', () => {
       console.log('[Provider Connected]', this.provider.connected);
     });
+    this.provider.on('close', () => {
+      console.log('connection close');
+      this.initlizeWebSocketListeners();
+    });
   };
 
-  async subscribeContractEvents() {
+  async subscribeContractEvents(minusBlockNumber = 5) {
     if (this.subscription !== null) return;
-    console.log("Subscribing Contract Events");
     const latestBlock = await this.transferService.getBlock('latest');
     console.log('Latest Block Number', latestBlock.number);
     this.subscription = this.contract.events.allEvents(
-      { fromBlock: latestBlock.number - 1 },
+      { fromBlock: latestBlock.number - minusBlockNumber },
       (error: any, result: any) => {
         switch (result?.event) {
           case 'Acquire':
@@ -52,7 +60,10 @@ export class TransferController {
             this.transferService.onCommentStatusChange(result);
             break;
           default:
-            console.log('events error', error);
+            if (error !== null) {
+              console.log('contract events error', error.message);
+              this.unsubscribeContractEvents();
+            }
         }
       },
     );
@@ -62,13 +73,16 @@ export class TransferController {
     if (this.subscription && this.subscription.unsubscribe) {
       this.subscription.unsubscribe((_: any, success: any) => {
         if (success) {
-          console.log('Successfully unsubscribed!', success);
+          console.log('unsubscribe successfull');
+          this.provider.reconnectOptions.auto = false;
+          this.provider.disconnect();
           this.subscription = null;
-          this.subscribeContractEvents();
-        }
+          delete this.contract;
+          delete this.provider;
+        };
       });
-    }
-  }
+    };
+  };
 
   @Cron(CronExpression.EVERY_5_HOURS)
   async handleEvents() {
